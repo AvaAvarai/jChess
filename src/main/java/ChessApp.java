@@ -17,7 +17,7 @@ public class ChessApp {
 
     public ChessApp() {
         frame = new JFrame("Java Chess");
-        ImageIcon appIcon = new ImageIcon(getClass().getResource("icons/king_black.png"));
+        ImageIcon appIcon = new ImageIcon(getClass().getResource("/icons/king_black.png"));
         frame.setIconImage(appIcon.getImage());
         playerColor = StartMenu.showMenu();
         
@@ -285,7 +285,7 @@ public class ChessApp {
 
     private void showEndGamePopup(String title, String message) {
         // Load and scale the black king icon
-        ImageIcon originalIcon = new ImageIcon(getClass().getResource("icons/king_black.png"));
+        ImageIcon originalIcon = new ImageIcon(getClass().getResource("/icons/king_black.png"));
         Image scaledImage = originalIcon.getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH);
         ImageIcon scaledIcon = new ImageIcon(scaledImage);
     
@@ -312,7 +312,7 @@ public class ChessApp {
     }
 
     private void declareStalemate() {
-        ImageIcon icon = new ImageIcon(getClass().getResource("icons/king_black.png"));
+        ImageIcon icon = new ImageIcon(getClass().getResource("/icons/king_black.png"));
         ImageIcon scaledIcon = new ImageIcon(icon.getImage().getScaledInstance(15, 25, Image.SCALE_SMOOTH));
 
         Object[] options = {"Restart", "Exit"};
