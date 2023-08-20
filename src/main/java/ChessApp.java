@@ -16,8 +16,8 @@ public class ChessApp {
     private PieceColor playerColor;
 
     public ChessApp() {
-        frame = new JFrame("Java Chess");
-        ImageIcon appIcon = new ImageIcon(getClass().getResource("/icons/king_black.png"));
+        frame = new JFrame("jChess");
+        ImageIcon appIcon = new ImageIcon(getClass().getResource("/icons/king_black_icon.png"));
         frame.setIconImage(appIcon.getImage());
         playerColor = StartMenu.showMenu();
         
@@ -170,7 +170,7 @@ public class ChessApp {
                 movePieceToSquare(row, col);
                 unhighlightAllSquares();
                 selectedPiece = null;  // Reset for the next selection
-    
+                checkGameOverConditions();
                 if (playerColor == PieceColor.WHITE) {
                     executeRandomComputerMove(PieceColor.BLACK);
                 } else if (playerColor == PieceColor.BLACK) {
@@ -272,16 +272,6 @@ public class ChessApp {
     
         return legalMoves;
     }
-    
-    private static class Move {
-        Point start;
-        Point end;
-    
-        Move(Point start, Point end) {
-            this.start = start;
-            this.end = end;
-        }
-    }
 
     private void showEndGamePopup(String title, String message) {
         // Load and scale the black king icon
@@ -313,11 +303,11 @@ public class ChessApp {
 
     private void declareStalemate() {
         ImageIcon icon = new ImageIcon(getClass().getResource("/icons/king_black.png"));
-        ImageIcon scaledIcon = new ImageIcon(icon.getImage().getScaledInstance(15, 25, Image.SCALE_SMOOTH));
+        ImageIcon scaledIcon = new ImageIcon(icon.getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH));
 
         Object[] options = {"Restart", "Exit"};
         int choice = JOptionPane.showOptionDialog(frame, 
-                                                "The game is a stalemate! What would you like to do next?", 
+                                                "The game is a stalemate...", 
                                                 "Stalemate", 
                                                 JOptionPane.YES_NO_OPTION, 
                                                 JOptionPane.INFORMATION_MESSAGE, 
