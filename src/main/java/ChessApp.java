@@ -113,28 +113,6 @@ public class ChessApp {
             // King and Queen
             squares[7][3].setPiece(new ChessPiece(PieceType.QUEEN, PieceColor.BLACK));
             squares[7][4].setPiece(new ChessPiece(PieceType.KING, PieceColor.BLACK));
-        
-            // Pawns
-            for (int col = 0; col < 8; col++) {
-                squares[1][col].setPiece(new ChessPiece(PieceType.PAWN, PieceColor.WHITE));
-            }
-
-            // Rooks
-            squares[0][0].setPiece(new ChessPiece(PieceType.ROOK, PieceColor.WHITE));
-            squares[0][7].setPiece(new ChessPiece(PieceType.ROOK, PieceColor.WHITE));
-
-            // Knights
-            squares[0][1].setPiece(new ChessPiece(PieceType.KNIGHT, PieceColor.WHITE));
-            squares[0][6].setPiece(new ChessPiece(PieceType.KNIGHT, PieceColor.WHITE));
-
-            // Bishops
-            squares[0][2].setPiece(new ChessPiece(PieceType.BISHOP, PieceColor.WHITE));
-            squares[0][5].setPiece(new ChessPiece(PieceType.BISHOP, PieceColor.WHITE));
-
-            // King and Queen
-            squares[0][3].setPiece(new ChessPiece(PieceType.QUEEN, PieceColor.WHITE));
-            squares[0][4].setPiece(new ChessPiece(PieceType.KING, PieceColor.WHITE));
-
         }
 
         if (playerColor == PieceColor.BLACK) {
@@ -166,21 +144,25 @@ public class ChessApp {
         } else {
             // Second click: Try to move the piece
             if (highlightedSquares.contains(clickedSquare)) {
-                // Move the piece
-                movePieceToSquare(row, col);
-                unhighlightAllSquares();
-                selectedPiece = null;  // Reset for the next selection
-                checkGameOverConditions();
-                if (playerColor == PieceColor.WHITE) {
-                    executeRandomComputerMove(PieceColor.BLACK);
-                } else if (playerColor == PieceColor.BLACK) {
-                    executeRandomComputerMove(PieceColor.WHITE);
+                if (isMoveSafe(getSquareOfPiece(selectedPiece).getRow(), getSquareOfPiece(selectedPiece).getCol(), row, col, playerColor)) {
+                    // Move the piece
+                    movePieceToSquare(row, col);
+                    unhighlightAllSquares();
+                    selectedPiece = null;  // Reset for the next selection
+                    checkGameOverConditions(playerColor);
+                    if (playerColor == PieceColor.WHITE) {
+                        executeRandomComputerMove(PieceColor.BLACK);
+                    } else if (playerColor == PieceColor.BLACK) {
+                        executeRandomComputerMove(PieceColor.WHITE);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(frame, "Invalid move: You cannot move into check.", "Invalid Move", JOptionPane.WARNING_MESSAGE);
+                    unhighlightAllSquares();
+                    selectedPiece = null;  // Reset for the next selection
                 }
             } else {
                 unhighlightAllSquares();
                 selectedPiece = null;  // Reset for the next selection
-
-                checkGameOverConditions();
             }
         }
     }    
@@ -202,7 +184,7 @@ public class ChessApp {
                 squares[row][col].setPiece(new ChessPiece(PieceType.QUEEN, computerColor));
             }
         }
-    }
+   }
 
     private boolean hasLostKing(PieceColor color) {
         for (int row = 0; row < 8; row++) {
@@ -226,6 +208,55 @@ public class ChessApp {
             }
         }
         return true;  // No pieces found
+    }
+
+    private Point findKing(PieceColor color) {
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                ChessPiece piece = squares[row][col].getPiece();
+                if (piece != null && piece.getType() == PieceType.KING && piece.getColor() == color) {
+                    return new Point(col, row);
+                }
+            }
+        }
+        return null; // Should never happen
+    }
+    
+    private boolean isMoveSafe(int fromRow, int fromCol, int toRow, int toCol, PieceColor color) {
+        // Create a virtual board
+        ChessSquare[][] virtualBoard = new ChessSquare[8][8];
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                virtualBoard[row][col] = new ChessSquare(row, col, squares[row][col].getBackground(), null);
+                if (squares[row][col].getPiece() != null) {
+                    virtualBoard[row][col].setPiece(new ChessPiece(squares[row][col].getPiece().getType(), squares[row][col].getPiece().getColor()));
+                }
+            }
+        }
+    
+        // Simulate the move
+        virtualBoard[toRow][toCol].setPiece(virtualBoard[fromRow][fromCol].getPiece());
+        virtualBoard[fromRow][fromCol].setPiece(null);
+    
+        // Find the king's position
+        Point kingPosition = findKing(color);
+    
+        // Check if the king is in check
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                ChessPiece piece = virtualBoard[row][col].getPiece();
+                if (piece != null && piece.getColor() != color) {
+                    List<Point> attackMoves = piece.getPossibleMoves(col, row, virtualBoard, color);
+                    for (Point attackMove : attackMoves) {
+                        if (attackMove.equals(kingPosition)) {
+                            return false; // The king would be in check
+                        }
+                    }
+                }
+            }
+        }
+    
+        return true; // The move is safe
     }    
 
     private ChessSquare getSquareOfPiece(ChessPiece piece) {
@@ -246,14 +277,48 @@ public class ChessApp {
         highlightedSquares.clear();
     }
 
-    private void checkGameOverConditions() {
-        PieceColor opponentColor = (playerColor == PieceColor.WHITE) ? PieceColor.BLACK : PieceColor.WHITE;
+    private void checkGameOverConditions(PieceColor currentPlayer) {
+        PieceColor opponentColor = (currentPlayer == playerColor) ? currentPlayer : playerColor;
+    
         if (hasLostKing(opponentColor) || hasLostAllPieces(opponentColor)) {
             showEndGamePopup("Congratulations, You Win!", "Would you like to play again?");
-        } else if (hasLostKing(playerColor) || hasLostAllPieces(playerColor)) {
+            return;
+        } 
+    
+        if (hasLostKing(currentPlayer) || hasLostAllPieces(currentPlayer)) {
             showEndGamePopup("Sorry, You Lose.", "Would you like to play again?");
+            return;
         }
-    }
+    
+        // Check for checkmate or stalemate
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                ChessPiece piece = squares[row][col].getPiece();
+                if (piece != null && piece.getColor() == currentPlayer) {
+                    List<Point> possibleMoves = piece.getPossibleMoves(col, row, squares, currentPlayer);
+                    for (Point move : possibleMoves) {
+                        if (isMoveSafe(row, col, move.y, move.x, currentPlayer)) {
+                            return; // Found a legal move, so it's neither checkmate nor stalemate
+                        }
+                    }
+                }
+            }
+        }
+    
+        // If we reach here, it's either checkmate or stalemate.
+        Point kingPosition = findKing(currentPlayer);
+        boolean isCheckmate = !isMoveSafe(kingPosition.y, kingPosition.x, kingPosition.y, kingPosition.x, currentPlayer);
+        
+        if (isCheckmate) {
+            if (currentPlayer == playerColor) {
+                showEndGamePopup("Sorry, You Lose by Checkmate.", "Would you like to play again?");
+            } else {
+                showEndGamePopup("Congratulations, You Win by Checkmate!", "Would you like to play again?");
+            }
+        } else {
+            declareStalemate();
+        }
+    }      
     
     private List<Move> getAllLegalMovesForComputer(PieceColor computerColor) {
         List<Move> legalMoves = new ArrayList<>();
@@ -295,7 +360,7 @@ public class ChessApp {
             ChessPiece pieceToMove = squares[randomMove.start.y][randomMove.start.x].getPiece();
             squares[randomMove.end.y][randomMove.end.x].setPiece(pieceToMove);
             squares[randomMove.start.y][randomMove.start.x].setPiece(null);
-            checkGameOverConditions();
+            checkGameOverConditions(computerColor);
         } else {
             declareStalemate();
         }

@@ -76,5 +76,13 @@ class ChessSquare extends JButton {
             this.setIcon(scaledIcon);
         }
     }
+
+    protected int getRow() {
+        return row;
+    }
+
+    protected int getCol() {
+        return col;
+    }
 }
 
