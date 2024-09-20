@@ -1,6 +1,6 @@
 # jChess
 
-Chess game written in Java using Java Swing
+Java Chess game demo written with Swing for GUI.
 
 ![Example Gameplay](ex1.png)
 
@@ -21,3 +21,5 @@ Run the provided .jar file OR compile and run
 - Block moves that place into check or yield checkmate
 - Minimax algorithm for computer AI (multiple difficulties?)
 - Game win/loss ratio tracking
+- Undo move functionality
+- Move history display

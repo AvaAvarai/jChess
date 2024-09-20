@@ -1,2 +1,4 @@
 *.class
 bin/
+.DS_Store
+*.jar
